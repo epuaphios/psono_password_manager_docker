@@ -1,0 +1,53 @@
+  version: '3'
+  services:
+    psono_db:
+      image: postgres:10.4
+      container_name: psono_db
+      environment:
+        - POSTGRES_USER=psono
+        - POSTGRES_PASSWORD=psono
+        - POSTGRES_DB=psono
+        - DB_EXTENSION=pgcrypto
+        - DB_EXTENSION=ltree
+      volumes:
+        - "psonodb:/var/lib/postgresql/data"
+      ports:
+        - "5432:5432"
+      restart: always
+
+    psono_backend:
+      image: psono/psono-server:latest
+      container_name: psono_backend
+      volumes:
+        - "${PWD}/settings.yaml:/root/.psono_server/settings.yaml"
+      links:
+        - psono_db
+      ports:
+        - "10100:80"
+      restart: always
+      depends_on:
+        - psono_db
+
+    psono_client:
+      image: psono/psono-client:latest
+      container_name: psono_client
+      ports:
+        - "10101:80"
+      restart: always
+      depends_on:
+        - psono_db
+        - psono_backend
+
+    psono_admin:
+      image: psono/psono-admin-client:latest
+      container_name: psono_admin
+      ports:
+        - "10102:80"
+      restart: always
+      depends_on:
+        - psono_db
+        - psono_backend
+  volumes:
+    psonodb:
+    #  external: true
+
